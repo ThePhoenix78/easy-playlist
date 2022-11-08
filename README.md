@@ -106,5 +106,3 @@ def music_over(data):
 	bot.play_music(pl.get_current().file)
 
 ```
-
-### Installation
