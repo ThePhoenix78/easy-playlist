@@ -14,7 +14,7 @@
 
 **This library will work with python 3.6+**
 
-PyPi : `pip install PyPlaylist`
+PyPi : `pip install easy-playlist`
 
 GitHub : [Github](https://github.com/ThePhoenix78/Playlist)
 
