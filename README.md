@@ -30,7 +30,7 @@ It's was desinged to work with bots in general
 ### Simple tasks
 
 ```py
-from PyPlaylist import Playlist
+from easy_playlist import Playlist
 
 pl = Playlist()
 
