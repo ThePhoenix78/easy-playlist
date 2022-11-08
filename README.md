@@ -6,8 +6,8 @@
 
 1. [**Installation**](#installation)
 2. [**Usages**](#usages)
-3. [**Documentation**](#documentation)
-4. [**Code example**](#code-example)
+3. [**Code example**](#code-example)
+4. [**Documentation**](#documentation)
 
 
 ## Installation
@@ -16,7 +16,7 @@
 
 PyPi : `pip install PyPlaylist`
 
-GitHub : [Github](https://www.github.com)
+GitHub : [Github](https://github.com/ThePhoenix78/Playlist)
 
 
 ## Usages
