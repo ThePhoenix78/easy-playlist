@@ -3,7 +3,6 @@ from random import choice, shuffle
 from mutagen.mp3 import MP3
 from threading import Thread
 import time
-import signal
 import json
 import sys
 
@@ -26,68 +25,6 @@ def shorter(file, before: int = 0, after: int = 0, output: str = None):
     with open(output, "wb") as f:
         for lig in music[cut_before:cut_after]:
             f.write(lig)
-
-
-class TimerMusic:
-    def __init__(self, run: bool = True):
-        self.playlists = []
-        self.run = run
-        self.launched = False
-
-        if run:
-            self.start()
-
-    def _check_music(self):
-        while self.run:
-            for playlist in self.playlists:
-                music = playlist.get_current()
-
-                if not music:
-                    continue
-
-                if not music.is_over() and music.is_playing():
-                    music.add_timer(.2)
-                    playlist.lock = False
-
-                elif music.is_over() and pl.is_auto() and not playlist.lock:
-                    playlist.lock = True
-                    self.call_event("music_over", playlist)
-                    playlist.next()
-
-                elif music.is_over() and not playlist.lock:
-                    playlist.lock = True
-                    self.call_event("music_over", playlist)
-
-            time.sleep(.2)
-
-        self.launched = False
-
-    def call_event(self, name: str, playlist):
-        data = Parameters(name)
-        data.playlist = playlist
-        data.music = playlist.get_current()
-        playlist.process_data(data)
-
-    def add_playlist(self, playlist):
-        self.playlists.append(playlist)
-
-    def remove_playlist(self, playlist):
-        if playlist in self.playlist:
-            self.playlist.remove(playlist)
-
-    def stop(self):
-        self.run = False
-        self.launched = False
-
-    def start(self):
-        if not self.launched:
-            self.run = True
-            Thread(target=self._check_music).start()
-
-        self.launched = True
-
-
-timer_music = TimerMusic(False)
 
 
 class Music:
@@ -145,18 +82,13 @@ class Music:
         return self.build_str()
 
 
-class Playlist(Commands):
-    timer_music = timer_music
-
-    def __init__(self, name: str = "playlist",
+class Playlist:
+    def __init__(self,
+                 name: str = "playlist",
                  playlist: list = [],
                  keep_going: bool = False,
-                 auto: bool = False,
-                 timer: bool = True
+                 auto: bool = False
                  ):
-
-        Commands.__init__(self)
-        self.prefix = ""
 
         self.name = name
         self.current = None
@@ -166,15 +98,10 @@ class Playlist(Commands):
         self.auto = auto
 
         self.playlist = []
-        self.locked = False
+        self.lock = True
 
         if playlist:
             self.add_music(playlist)
-
-        timer_music.add_playlist(self)
-
-        if timer:
-            timer_music.start()
 
         self.init()
 
@@ -266,6 +193,9 @@ class Playlist(Commands):
                     m = self.get_music(m)
                 if m:
                     self.playlist.remove(m)
+
+        self.check_index()
+        self.update(False)
 
     def remove_index(self, index: int):
         if 0 <= index < len(self.playlist):
@@ -399,14 +329,6 @@ class Playlist(Commands):
         except AttributeError:
             pass
 
-    def exit(self):
-        self.stop()
-        self.clear()
-        self.timer_music.stop()
-
-    def start_timer(self):
-        timer_music.start()
-
     def save(self):
         with open(f"{self.name}.json", "w") as f:
             f.write(json.dumps(self.get_files()))
@@ -420,7 +342,7 @@ class Playlist(Commands):
         res = ""
         for key, value in self.__dict__.items():
             if key == "current":
-                res += f"{key} : \n---------------\n{value}---------------\n"
+                res += f"{key} : \n-----MUSIC-----\n{value}---------------\n"
             elif key == "playlist":
                 res += f"{key} : {self.get_names()}\n"
             else:
@@ -431,26 +353,118 @@ class Playlist(Commands):
         return self.build_str()
 
 
-def sigint_handler(signal, frame):
-    timer_music.stop()
-    sys.exit(0)
+class Playlists(Commands):
+    def __init__(self, run: bool = True):
+        Commands.__init__(self)
+        self.playlists = []
+        self.run = run
+        self.launched = False
 
+        if run:
+            self.start()
 
-signal.signal(signal.SIGINT, sigint_handler)
+    def _check_music(self):
+        while self.run:
+            for playlist in self.playlists:
+                music = playlist.get_current()
+
+                if not music:
+                    playlist.lock = True
+                    continue
+
+                if not music.is_over() and music.is_playing():
+                    playlist.lock = False
+                    music.add_timer(.2)
+
+                elif music.is_over() and playlist.is_auto() and not playlist.lock:
+                    playlist.lock = True
+                    self.call_event("music_over", playlist)
+                    playlist.next()
+
+                elif music.is_over() and not playlist.lock:
+                    playlist.lock = True
+                    self.call_event("music_over", playlist)
+
+            time.sleep(.2)
+
+        self.launched = False
+
+    def call_event(self, name: str, playlist):
+        data = Parameters(name)
+        data.playlist = playlist
+        data.music = playlist.get_current()
+        self.process_data(data)
+
+    def add_playlist(self, playlist):
+        self.playlists.append(playlist)
+
+    def remove_playlist(self, playlist):
+        if playlist in self.playlist:
+            self.playlist.remove(playlist)
+
+    def stop(self):
+        self.run = False
+        self.launched = False
+
+    def start(self):
+        if not self.launched:
+            self.run = True
+            Thread(target=self._check_music).start()
+
+        self.launched = True
+
+    def add_playlist(self,
+                     name: str = "playlist",
+                     playlist: list = [],
+                     keep_going: bool = False,
+                     auto: bool = False
+                    ):
+
+        self.playlists.append(Playlist(name, playlist, keep_going, auto))
+
+    def add_music(self, playlist: str, music: str):
+        if isinstance(playlist, str):
+            temp = self.get_playlist(playlist)
+
+            if not temp:
+                self.add_playlist(playlist, music)
+                playlist = self.get_playlist(playlist)
+            else:
+                playlist = temp
+
+        playlist.add_music(music)
+
+    def get_playlist(self, name: str):
+        for play in self.playlists:
+            if name == play.get_name():
+                return play
+
+    def exit(self):
+        self.stop()
 
 
 if __name__ == "__main__":
-    pl = Playlist("test", keep_going=False, auto=False, timer=True)
-    pl.add_music(["music/bip1.mp3", "music/bip2.mp3", "bip3.mp3"])
-    pl.play()
+    pl = Playlists()
+    pl.add_playlist(name="test1", playlist=["music/bip1.mp3", "music/bip2.mp3"])
+    pl.add_playlist(name="test2", playlist=["music/bip1.mp3", "music/bip2.mp3"])
+    pl.add_music("test1", "music/bip3.mp3")
+
+    pl1 = pl.get_playlist("test1")
+    pl1.play()
+
+    pl2 = pl.get_playlist("test2")
+    pl2.play()
+
+    print("starting...")
+
 
     @pl.event("music_over")
     def music_over(data):
         print(f"[{data.playlist.name}] {data.music.name} is over, next song now!")
 
-        if pl.is_over():
+        if data.playlist.is_over():
             print(f"Playlist {data.playlist.name} is over")
-            pl.exit()
+            data.playlist.clear()
             return
 
-        pl.next()
+        data.playlist.next()
