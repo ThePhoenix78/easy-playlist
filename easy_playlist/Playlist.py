@@ -12,7 +12,7 @@ from easy_events import Events, Parameters
 def shorter(file, before: int = 0, after: int = 0, output: str = None):
     music_len = MP3(file).info.length
 
-    with open(file, "rb") as f:
+    with open(file, "rb", encoding="utf8") as f:
         music = f.readlines()
 
     nb_lines = len(music)
@@ -22,7 +22,7 @@ def shorter(file, before: int = 0, after: int = 0, output: str = None):
     if not output:
         output = file.replace(".mp3", "CUT.mp3")
 
-    with open(output, "wb") as f:
+    with open(output, "wb", encoding="utf8") as f:
         for lig in music[cut_before:cut_after]:
             f.write(lig)
 
@@ -330,11 +330,11 @@ class Playlist:
             pass
 
     def save(self):
-        with open(f"{self.name}.json", "w") as f:
+        with open(f"{self.name}.json", "w", encoding="utf8") as f:
             f.write(json.dumps(self.get_files()))
 
     def load(self):
-        with open(f"{self.name}.json", "r") as f:
+        with open(f"{self.name}.json", "r", encoding="utf8") as f:
             val = json.loads(f.read())
         self.add_music(val)
 
