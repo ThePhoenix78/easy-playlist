@@ -1,11 +1,12 @@
-# coding: utf-8
+#  coding: utf-8
 from random import choice, shuffle
 from mutagen.mp3 import MP3
 from threading import Thread
 import time
 import json
+import sys
 
-from easy_events import Commands, Parameters
+from easy_events import Events, Parameters
 
 
 def shorter(file, before: int = 0, after: int = 0, output: str = None):
@@ -352,9 +353,9 @@ class Playlist:
         return self.build_str()
 
 
-class Playlists(Commands):
+class Playlists(Events):
     def __init__(self, run: bool = True):
-        Commands.__init__(self)
+        Events.__init__(self)
         self.playlists = []
         self.run = run
         self.launched = False
@@ -393,6 +394,9 @@ class Playlists(Commands):
         data.playlist = playlist
         data.music = playlist.get_current()
         self.process_data(data)
+
+    def put_playlist(self, playlist):
+        self.playlists.append(playlist)
 
     def remove_playlist(self, playlist):
         if playlist in self.playlist:
@@ -441,9 +445,9 @@ class Playlists(Commands):
 
 if __name__ == "__main__":
     pl = Playlists()
-    pl.add_playlist(name="test1", playlist=["../music/bip1.mp3", "../music/bip2.mp3"])
-    pl.add_playlist(name="test2", playlist=["../music/bip1.mp3", "../music/bip2.mp3"])
-    pl.add_music("test1", "../music/bip3.mp3")
+    pl.add_playlist(name="test1", playlist=["music/bip1.mp3", "music/bip2.mp3"])
+    pl.add_playlist(name="test2", playlist=["music/bip1.mp3", "music/bip2.mp3"])
+    pl.add_music("test1", "music/bip3.mp3")
 
     pl1 = pl.get_playlist("test1")
     pl1.play()
@@ -452,6 +456,7 @@ if __name__ == "__main__":
     pl2.play()
 
     print("starting...")
+
 
     @pl.event("music_over")
     def music_over(data):
