@@ -30,9 +30,11 @@ It's was desinged to work with bots in general
 ### Simple tasks
 
 ```py
-from easy_playlist import Playlist
+from easy_playlist import Playlists
 
-pl = Playlist()
+pls = Playlists()
+pls.add_playlist("test")
+pl = pls.get_playlist("test")
 
 # add music to your playlist
 pl.add_music("path_to_music.mp3")
@@ -66,11 +68,14 @@ pl.exit()
 ### To make it work with a bot
 
 ```py
-from PyPlaylist import Playlist
+from easy_playlist import Playlists
 
 # any bot library
 bot = Bot()
-pl = Playlist()
+pls = Playlists()
+pls.add_playlist("test")
+
+pl = pls.get_playlist("test")
 
 
 # code example
@@ -105,4 +110,33 @@ def music_over(data):
 	pl.next()
 	bot.play_music(pl.get_current().file)
 
+```
+
+### An other code to explain
+
+```py
+pl = Playlists()
+pl.add_playlist(name="test1", playlist=["music/bip1.mp3", "music/bip2.mp3"])
+pl.add_playlist(name="test2", playlist=["music/bip1.mp3", "music/bip2.mp3"])
+pl.add_music("test1", "music/bip3.mp3")
+
+pl1 = pl.get_playlist("test1")
+pl1.play()
+
+pl2 = pl.get_playlist("test2")
+pl2.play()
+
+print("starting...")
+
+
+@pl.event("music_over")
+def music_over(data):
+    print(f"[{data.playlist.name}] {data.music.name} is over, next song now!")
+
+    if data.playlist.is_over():
+        print(f"Playlist {data.playlist.name} is over")
+        data.playlist.clear()
+        return
+
+    data.playlist.next()
 ```
