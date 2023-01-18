@@ -86,7 +86,7 @@ class Playlist:
     def __init__(self,
                  name: str = "playlist",
                  playlist: list = [],
-                 keep_going: bool = False,
+                 loop: bool = False,
                  auto: bool = False
                  ):
 
@@ -94,7 +94,7 @@ class Playlist:
         self.current = None
         self.index = 0
 
-        self.keep_going = keep_going
+        self.loop = loop
         self.auto = auto
 
         self.playlist = []
@@ -216,7 +216,7 @@ class Playlist:
         index += i
 
         if index >= len(self.playlist):
-            if self.keep_going and check_end:
+            if self.loop and check_end:
                 return True
 
             elif check_end:
@@ -225,7 +225,7 @@ class Playlist:
             self.index = 0
 
         elif index < 0:
-            if self.keep_going and check_end:
+            if self.loop and check_end:
                 return True
 
             elif check_end:
@@ -255,7 +255,7 @@ class Playlist:
         if not self.playlist:
             return False
 
-        self.stop_music()
+        self.stop()
 
         if not self.check_index(-1, check_end=True):
             return False
@@ -281,7 +281,7 @@ class Playlist:
         if play:
             self.play()
 
-    def play(self, val=None):
+    def play(self, val: int = None):
 
         if self.index < 0:
             self.index = 0
@@ -416,11 +416,11 @@ class Playlists(Events):
     def add_playlist(self,
                      name: str = "playlist",
                      playlist: list = [],
-                     keep_going: bool = False,
+                     loop: bool = False,
                      auto: bool = False
                     ):
 
-        self.playlists.append(Playlist(name, playlist, keep_going, auto))
+        self.playlists.append(Playlist(name, playlist, loop, auto))
 
     def add_music(self, playlist: str, music: str):
         if isinstance(playlist, str):
