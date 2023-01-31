@@ -30,11 +30,16 @@ def shorter(file, before: int = 0, after: int = 0, output: str = None):
 class Music:
     def __init__(self, path_to_file: str):
         self.file = path_to_file
-        self.name = self.file.replace("\\", "/").rsplit("/", 1)[-1]
+        self.name = path_to_file
+
+        if "\\" in path_to_file or "/" in path_to_file:
+            self.name = path_to_file.replace("\\", "/").rsplit("/", 1)[-1]
+
         self.length = MP3(self.file).info.length
         self.timer = 0
         self.playing = False
         self.over = False
+        self.duration = self.convert_time(self.length)
 
     def add_timer(self, val=1):
         self.timer += val
@@ -44,6 +49,20 @@ class Music:
             return False
 
         return True
+
+    def convert_time(self, value):
+        val2, val = int(value//60), int(value % 60)
+        message = f"{val2}:{val}"
+
+        if val2 > 60:
+            val3, val2 = int(val2//60), int(val2 % 60)
+            message = f"{val3}:{val2}:{val}"
+
+        return message
+
+    def str_timer(self):
+        timer = self.convert_time(self.timer)
+        return f"{timer}/{self.duration}"
 
     def play(self):
         self.reset_timer()
@@ -116,6 +135,12 @@ class Playlist:
 
     def get_index(self):
         return self.index
+
+    def get_current_timer(self):
+        return self.current.duration
+
+    def str_timer(self):
+        return self.current.str_timer()
 
     def is_auto(self):
         return self.auto
@@ -445,18 +470,18 @@ class Playlists(Events):
 
 if __name__ == "__main__":
     pl = Playlists()
-    pl.add_playlist(name="test1", playlist=["music/bip1.mp3", "music/bip2.mp3"])
-    pl.add_playlist(name="test2", playlist=["music/bip1.mp3", "music/bip2.mp3"])
-    pl.add_music("test1", "music/bip3.mp3")
+    pl.add_playlist(name="test1", playlist=["music.mp3"])
+    pl.add_playlist(name="test2", playlist=["music.mp3"])
+    pl.add_music("test1", "music.mp3")
 
     pl1 = pl.get_playlist("test1")
     pl1.play()
+    print(f"{pl1.str_timer()}")
 
     pl2 = pl.get_playlist("test2")
     pl2.play()
 
     print("starting...")
-
 
     @pl.event("music_over")
     def music_over(data):
