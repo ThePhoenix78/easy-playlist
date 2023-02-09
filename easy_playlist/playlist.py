@@ -193,7 +193,7 @@ class Playlist:
         return [m.file for m in self.playlist]
 
     def get_music(self, val):
-        if isinstance(val, int) and (0 <= val < len(self.playlist)):
+        if isinstance(val, int) and self.is_index_in_range(val):
             return self.playlist[val]
 
         elif isinstance(val, str):
@@ -233,6 +233,20 @@ class Playlist:
 
     def get_random(self):
         return choice(self.playlist)
+
+    def get_next_music(self):
+        if self.is_index_in_range(self.index+1):
+            return self.get_music(self.index+1)
+
+    def get_previous_music(self):
+        if self.is_index_in_range(self.index-1):
+            return self.get_music(self.index-1)
+
+    def add_index(self, i: int = 1):
+        self.index += i
+
+    def is_index_in_range(self, index: int):
+        return 0 <= index < len(self.playlist)
 
     def check_index(self, i: int = 0, index: int = None, check_end: bool = False):
         if not index:
@@ -290,8 +304,8 @@ class Playlist:
         return True
 
     def clear(self):
-        self.playlist = []
         self.stop()
+        self.playlist = []
         self.index = 0
 
     def init(self):
@@ -418,7 +432,7 @@ class Playlists(Events):
         data = Parameters(name)
         data.playlist = playlist
         data.music = playlist.get_current()
-        self.process_data(data)
+        self.trigger(data)
 
     def put_playlist(self, playlist):
         self.playlists.append(playlist)
@@ -426,17 +440,6 @@ class Playlists(Events):
     def remove_playlist(self, playlist):
         if playlist in self.playlist:
             self.playlist.remove(playlist)
-
-    def stop(self):
-        self.run = False
-        self.launched = False
-
-    def start(self):
-        if not self.launched:
-            self.run = True
-            Thread(target=self._check_music).start()
-
-        self.launched = True
 
     def add_playlist(self,
                      name: str = "playlist",
@@ -464,11 +467,25 @@ class Playlists(Events):
             if name == play.get_name():
                 return play
 
+    def start(self):
+        if not self.launched:
+            self.run = True
+            Thread(target=self._check_music).start()
+
+        self.launched = True
+
+    def stop(self):
+        self.run = False
+        self.launched = False
+
     def exit(self):
         self.stop()
 
 
 if __name__ == "__main__":
+    a = [1, 2, 3, 4]
+    print(0 <= 4 < len(a))
+    quit()
     pl = Playlists()
     pl.add_playlist(name="test1", playlist=["music.mp3"])
     pl.add_playlist(name="test2", playlist=["music.mp3"])
@@ -477,7 +494,8 @@ if __name__ == "__main__":
     pl1 = pl.get_playlist("test1")
     pl1.play()
     print(f"{pl1.str_timer()}")
-
+    a = pl1.is_index_in_range(10)
+    print(a)
     pl2 = pl.get_playlist("test2")
     pl2.play()
 

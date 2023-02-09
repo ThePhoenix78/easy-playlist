@@ -1,4 +1,4 @@
-# PyPlaylist
+# easy-playlist
 
 **A library to easily manage yours playlists in python**
 
@@ -7,7 +7,7 @@
 1. [**Installation**](#installation)
 2. [**Usages**](#usages)
 3. [**Code example**](#code-example)
-4. [**Documentation**](#documentation)
+4. [**Documentation**](https://github.com/ThePhoenix78/easy-playlist/blob/main/DOCUMENTATION.md)
 
 
 ## Installation
@@ -16,7 +16,7 @@
 
 PyPi : `pip install easy-playlist`
 
-GitHub : [Github](https://github.com/ThePhoenix78/Playlist)
+GitHub : [Github](https://github.com/ThePhoenix78/easy-playlist)
 
 
 ## Usages
