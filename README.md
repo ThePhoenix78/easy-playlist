@@ -104,7 +104,7 @@ def play(music):
 	bot.play_music(music)
 
 
-@pl.event("music_over")
+@pl.on_music_over()
 def music_over(data):
 	print(f"{data.playlist.name} {data.music.name} is over, playing next now")
 	pl.next()
@@ -129,7 +129,7 @@ pl2.play()
 print("starting...")
 
 
-@pl.event("music_over")
+@pl.on_music_over()
 def music_over(data):
     print(f"[{data.playlist.name}] {data.music.name} is over, next song now!")
 
