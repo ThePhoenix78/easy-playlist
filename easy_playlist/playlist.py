@@ -394,7 +394,7 @@ class Playlist:
 
 class Playlists(Events):
     def __init__(self, run: bool = True):
-        Events.__init__(self)
+        Events.__init__(self, use_funct_name=False)
         self.playlists = []
         self.run = run
         self.launched = False
@@ -433,6 +433,17 @@ class Playlists(Events):
         data.playlist = playlist
         data.music = playlist.get_current()
         self.trigger(data)
+
+    def on_music_over(self, callback: callable = None):
+        def add_debug(func):
+            self.event(callback=func, aliases="music_over")
+            return func
+
+        if callback:
+            return add_debug(callback)
+
+        return add_debug
+
 
     def put_playlist(self, playlist):
         self.playlists.append(playlist)
@@ -483,26 +494,21 @@ class Playlists(Events):
 
 
 if __name__ == "__main__":
-    a = [1, 2, 3, 4]
-    print(0 <= 4 < len(a))
-    quit()
     pl = Playlists()
-    pl.add_playlist(name="test1", playlist=["music.mp3"])
-    pl.add_playlist(name="test2", playlist=["music.mp3"])
-    pl.add_music("test1", "music.mp3")
+    pl.add_playlist(name="test1", playlist=["bip1.mp3"])
+    pl.add_playlist(name="test2", playlist=["bip2.mp3"])
+    pl.add_music("test1", "bip2.mp3")
 
     pl1 = pl.get_playlist("test1")
     pl1.play()
     print(f"{pl1.str_timer()}")
-    a = pl1.is_index_in_range(10)
-    print(a)
     pl2 = pl.get_playlist("test2")
     pl2.play()
 
     print("starting...")
 
-    @pl.event("music_over")
-    def music_over(data):
+    @pl.on_music_over()
+    def over(data):
         print(f"[{data.playlist.name}] {data.music.name} is over, next song now!")
 
         if data.playlist.is_over():
