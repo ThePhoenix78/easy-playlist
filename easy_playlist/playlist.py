@@ -1,4 +1,6 @@
 #  coding: utf-8
+# Version 1.5.1
+
 from random import choice, shuffle
 from mutagen.mp3 import MP3
 from threading import Thread
@@ -12,7 +14,7 @@ from easy_events import Events, Parameters
 def shorter(file, before: int = 0, after: int = 0, output: str = None):
     music_len = MP3(file).info.length
 
-    with open(file, "rb", encoding="utf8") as f:
+    with open(file, "rb") as f:
         music = f.readlines()
 
     nb_lines = len(music)
@@ -22,7 +24,7 @@ def shorter(file, before: int = 0, after: int = 0, output: str = None):
     if not output:
         output = file.replace(".mp3", "CUT.mp3")
 
-    with open(output, "wb", encoding="utf8") as f:
+    with open(output, "wb") as f:
         for lig in music[cut_before:cut_after]:
             f.write(lig)
 
