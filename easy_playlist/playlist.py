@@ -29,6 +29,12 @@ def shorter(file, before: int = 0, after: int = 0, output: str = None):
             f.write(lig)
 
 
+class PlaylistObj:
+    def __init__(self, playlist, music):
+        self.playlist = playlist
+        self.music = music
+
+
 class Music:
     def __init__(self, path_to_file: str):
         self.file = path_to_file
@@ -431,10 +437,8 @@ class Playlists(Events):
         self.launched = False
 
     def call_event(self, name: str, playlist):
-        data = Parameters(name)
-        data.playlist = playlist
-        data.music = playlist.get_current()
-        self.trigger(data)
+        data = PlaylistObj(playlist , playlist.get_current())
+        self.trigger(name, context=data)
 
     def on_music_over(self, callback: callable = None):
         def add_debug(func):
