@@ -8,8 +8,6 @@ import time
 import json
 import sys
 
-from easy_events import Events, Parameters
-
 
 def shorter(file, before: int = 0, after: int = 0, output: str = None):
     music_len = MP3(file).info.length
@@ -400,12 +398,12 @@ class Playlist:
         return self.build_str()
 
 
-class Playlists(Events):
+class Playlists:
     def __init__(self, run: bool = True):
-        Events.__init__(self, use_funct_name=False)
         self.playlists = []
         self.run = run
         self.launched = False
+        self.callback = None
 
         if run:
             self.start()
@@ -425,31 +423,35 @@ class Playlists(Events):
 
                 elif music.is_over() and playlist.is_auto() and not playlist.lock:
                     playlist.lock = True
-                    self.call_event("music_over", playlist)
+
+                    if callable(self.callback):
+                        self.call_event(playlist)
+
                     playlist.next()
 
                 elif music.is_over() and not playlist.lock:
                     playlist.lock = True
-                    self.call_event("music_over", playlist)
+
+                    if callable(self.callback):
+                        self.call_event(playlist)
 
             time.sleep(.2)
 
         self.launched = False
 
-    def call_event(self, name: str, playlist):
+    def call_event(self, playlist):
         data = PlaylistObj(playlist , playlist.get_current())
-        self.trigger(name, context=data)
+        self.callback(data)
 
     def on_music_over(self, callback: callable = None):
         def add_debug(func):
-            self.event(callback=func, aliases="music_over")
+            self.callback = func
             return func
 
         if callback:
             return add_debug(callback)
 
         return add_debug
-
 
     def put_playlist(self, playlist):
         self.playlists.append(playlist)
