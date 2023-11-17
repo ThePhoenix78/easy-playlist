@@ -327,7 +327,6 @@ class Playlist:
             self.play()
 
     def play(self, val: int = None):
-
         if self.index < 0:
             self.index = 0
 
@@ -379,7 +378,7 @@ class Playlist:
             f.write(json.dumps(self.get_files()))
 
     def load(self):
-        with open(f"{self.name}.json", "r", encoding="utf8") as f:
+        with open(f"{self.name}.json", "r") as f:
             val = json.loads(f.read())
         self.add_music(val)
 
@@ -453,21 +452,26 @@ class Playlists:
 
         return add_debug
 
-    def put_playlist(self, playlist):
-        self.playlists.append(playlist)
-
     def remove_playlist(self, playlist):
         if playlist in self.playlist:
             self.playlist.remove(playlist)
 
     def add_playlist(self,
-                     name: str = "playlist",
-                     playlist: list = [],
+                     playlist: str = "playlist",
+                     musics: list = [],
                      loop: bool = False,
                      auto: bool = False
                     ):
 
-        self.playlists.append(Playlist(name, playlist, loop, auto))
+        if isinstance(playlist, Playlist):
+            pl = playlist
+        elif str(type(playlist)) == "<class 'easy_playlist.playlist.Playlist'>":
+            pl = playlist
+        else:
+            pl = Playlist(playlist, musics, loop, auto)
+
+        self.playlists.append(pl)
+        return pl
 
     def add_music(self, playlist: str, music: str):
         if isinstance(playlist, str):
@@ -503,14 +507,13 @@ class Playlists:
 
 if __name__ == "__main__":
     pl = Playlists()
-    pl.add_playlist(name="test1", playlist=["bip1.mp3"])
-    pl.add_playlist(name="test2", playlist=["bip2.mp3"])
+    pl1 = pl.add_playlist(playlist="test1", musics=["bip1.mp3"])
+    pl2 = pl.add_playlist(playlist="test2", musics=["bip2.mp3"])
     pl.add_music("test1", "bip2.mp3")
 
-    pl1 = pl.get_playlist("test1")
     pl1.play()
+
     print(f"{pl1.str_timer()}")
-    pl2 = pl.get_playlist("test2")
     pl2.play()
 
     print("starting...")
