@@ -183,6 +183,9 @@ class Playlist:
 
         elif isinstance(music, Music):
             self.playlist.append(music)
+            
+        elif str(type(music)) == "<class 'easy_playlist.playlist.Music'>":
+            self.playlist.append(music)
 
         elif isinstance(music, list):
             for m in music:
