@@ -33,8 +33,8 @@ It's was desinged to work with bots in general
 from easy_playlist import Playlists
 
 pls = Playlists()
-pls.add_playlist("test")
-pl = pls.get_playlist("test")
+pl = pls.add_playlist("test")
+# pl = pls.get_playlist("test")
 
 # add music to your playlist
 pl.add_music("path_to_music.mp3")
@@ -73,9 +73,9 @@ from easy_playlist import Playlists
 # any bot library
 bot = Bot()
 pls = Playlists()
-pls.add_playlist("test")
+pl = pls.add_playlist("test")
 
-pl = pls.get_playlist("test")
+# pl = pls.get_playlist("test")
 
 
 # code example
@@ -116,14 +116,14 @@ def music_over(data):
 
 ```py
 pl = Playlists()
-pl.add_playlist(name="test1", playlist=["music/bip1.mp3", "music/bip2.mp3"])
-pl.add_playlist(name="test2", playlist=["music/bip1.mp3", "music/bip2.mp3"])
+pl1 = pl.add_playlist(name="test1", playlist=["music/bip1.mp3", "music/bip2.mp3"])
+pl2 = pl.add_playlist(name="test2", playlist=["music/bip1.mp3", "music/bip2.mp3"])
 pl.add_music("test1", "music/bip3.mp3")
 
-pl1 = pl.get_playlist("test1")
-pl1.play()
+# pl1 = pl.get_playlist("test1")
+# pl2 = pl.get_playlist("test2")
 
-pl2 = pl.get_playlist("test2")
+pl1.play()
 pl2.play()
 
 print("starting...")
