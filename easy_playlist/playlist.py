@@ -8,54 +8,48 @@ import time
 import json
 
 
-def get_duration(file_path):
+def get_duration(file_path: str):
     try:
-        probe = ffmpeg.probe(file_path, v='error', select_streams='a', show_entries='format=duration')
+        probe: dict = ffmpeg.probe(file_path, v='error', select_streams='a', show_entries='format=duration')
         return float(probe['format']['duration'])
     except Exception:
         return None
 
 
 def shorter(file: str, before: int = 0, after: int = 0, output: str = None):
-    music_len = get_duration(file)
+    music_len: float = get_duration(file)
 
     with open(file, "rb") as f:
-        music = f.readlines()
+        music: list = f.readlines()
 
-    nb_lines = len(music)
-    cut_before = int(before * nb_lines / music_len)
-    cut_after = int(after * nb_lines / music_len)
+    nb_lines: int = len(music)
+    cut_before: int = int(before * nb_lines / music_len)
+    cut_after: int = int(after * nb_lines / music_len)
 
     if not output:
-        output = file.replace(".mp3", "CUT.mp3")
+        output: str = file.replace(".mp3", "CUT.mp3")
 
     with open(output, "wb") as f:
         for lig in music[cut_before:cut_after]:
             f.write(lig)
 
 
-class PlaylistObj:
-    def __init__(self, playlist, music):
-        self.playlist = playlist
-        self.music = music
-
-
 class Music:
     def __init__(self, path_to_file: str):
-        self.file = path_to_file
-        self.name = path_to_file
+        self.file: str = path_to_file
+        self.name: str = path_to_file
 
         if "\\" in path_to_file or "/" in path_to_file:
-            self.name = path_to_file.replace("\\", "/").rsplit("/", 1)[-1]
+            self.name: str = path_to_file.replace("\\", "/").rsplit("/", 1)[-1]
 
-        self.length = get_duration(self.file)
-        self.timer = 0
-        self.playing = False
-        self.over = False
-        self.duration = self.convert_time(self.length)
+        self.length: float = get_duration(self.file)
+        self.timer: float = 0
+        self.playing: bool = False
+        self.over: bool = False
+        self.duration: float = self.convert_time(self.length)
 
-    def add_timer(self, val=1):
-        self.timer += val
+    def add_timer(self, value: int = 1):
+        self.timer += value
 
         if self.timer > self.length:
             self.stop()
@@ -63,39 +57,39 @@ class Music:
 
         return True
 
-    def convert_time(self, value):
+    def convert_time(self, value: int):
         val2, val = int(value//60), int(value % 60)
-        message = f"{val2}:{val}"
+        message: str = f"{val2}:{val}"
 
         if val2 > 60:
             val3, val2 = int(val2//60), int(val2 % 60)
-            message = f"{val3}:{val2}:{val}"
+            message: str = f"{val3}:{val2}:{val}"
 
         return message
 
     def str_timer(self):
-        timer = self.convert_time(self.timer)
+        timer: str = self.convert_time(value=self.timer)
         return f"{timer}/{self.duration}"
 
     def play(self):
+        self.over: bool = False
+        self.playing: bool = True
         self.reset_timer()
-        self.over = False
-        self.playing = True
 
     def stop(self):
-        self.over = True
-        self.playing = False
+        self.over: bool = True
+        self.playing: bool = False
         self.reset_timer()
 
     def pause(self):
-        self.playing = False
+        self.playing: bool = False
 
     def resume(self):
-        self.over = False
-        self.playing = True
+        self.over: bool = False
+        self.playing: bool = True
 
     def reset_timer(self):
-        self.timer = 0
+        self.timer: float = 0
 
     def is_over(self):
         return self.over
@@ -104,7 +98,8 @@ class Music:
         return self.playing
 
     def build_str(self):
-        res = ""
+        res: str = ""
+
         for key, value in self.__dict__.items():
             res += f"{key} : {value}\n"
 
@@ -122,18 +117,18 @@ class Playlist:
                  auto: bool = False
                  ):
 
-        self.name = name
-        self.current = None
-        self.index = 0
+        self.name: str = name
+        self.current: Music = None
+        self.index: int = 0
 
-        self.loop = loop
-        self.auto = auto
+        self.loop: bool = loop
+        self.auto: bool = auto
 
-        self.playlist = []
-        self.lock = True
+        self.playlist: list = []
+        self.lock: bool = True
 
         if playlist:
-            self.add_music(playlist)
+            self.add_music(music=playlist)
 
         self.init()
 
@@ -159,19 +154,19 @@ class Playlist:
         return self.auto
 
     def is_over(self):
-        return not self.check_index(1, check_end=True)
+        return not self.check_index(i=1, check_end=True)
 
     def set_name(self, name: str):
-        self.name = name
+        self.name: str = name
 
     def set_playlist(self, playlist: list):
-        self.playlist = playlist
+        self.playlist: list = playlist
 
     def set_current(self, music: Music):
-        self.current = music
+        self.current: Music = music
 
     def set_index(self, index: int):
-        self.index = index
+        self.index: int = index
         self.check_index()
         self.update()
 
@@ -182,7 +177,7 @@ class Playlist:
         elif isinstance(music, Music):
             self.playlist.insert(index, music)
 
-        self.update(False)
+        self.update(play=False)
 
     def add_music(self, music: Music):
         if isinstance(music, str):
@@ -197,10 +192,11 @@ class Playlist:
         elif isinstance(music, list):
             for m in music:
                 if isinstance(m, str):
-                    m = Music(m)
+                    m: Music = Music(m)
+
                 self.playlist.append(m)
 
-        self.update(False)
+        self.update(play=False)
 
     def get_names(self):
         return [m.name for m in self.playlist]
@@ -208,14 +204,15 @@ class Playlist:
     def get_files(self):
         return [m.file for m in self.playlist]
 
-    def get_music(self, val):
-        if isinstance(val, int) and self.is_index_in_range(val):
+    def get_music(self, val: any):
+        if isinstance(val, int) and self.is_index_in_range(index=val):
             return self.playlist[val]
 
         elif isinstance(val, str):
             for m in self.playlist:
                 if val == m.name:
                     return m
+
                 elif val == m.file:
                     return m
 
@@ -231,18 +228,19 @@ class Playlist:
         elif isinstance(music, list):
             for m in music:
                 if isinstance(m, str):
-                    m = self.get_music(m)
+                    m = self.get_music(val=m)
+
                 if m:
                     self.playlist.remove(m)
 
         self.check_index()
-        self.update(False)
+        self.update(play=False)
 
     def remove_index(self, index: int):
         if 0 <= index < len(self.playlist):
             self.playlist.pop(index)
             self.check_index()
-            self.update(False)
+            self.update(play=False)
 
     def shuffle_playlist(self):
         shuffle(self.playlist)
@@ -251,12 +249,12 @@ class Playlist:
         return choice(self.playlist)
 
     def get_next_music(self):
-        if self.is_index_in_range(self.index+1):
-            return self.get_music(self.index+1)
+        if self.is_index_in_range(index=self.index+1):
+            return self.get_music(val=self.index+1)
 
     def get_previous_music(self):
-        if self.is_index_in_range(self.index-1):
-            return self.get_music(self.index-1)
+        if self.is_index_in_range(index=self.index-1):
+            return self.get_music(val=self.index-1)
 
     def add_index(self, i: int = 1):
         self.index += i
@@ -266,7 +264,7 @@ class Playlist:
 
     def check_index(self, i: int = 0, index: int = None, check_end: bool = False):
         if not index:
-            index = self.index
+            index: int = self.index
 
         index += i
 
@@ -277,7 +275,7 @@ class Playlist:
             elif check_end:
                 return False
 
-            self.index = 0
+            self.index: int = 0
 
         elif index < 0:
             if self.loop and check_end:
@@ -299,11 +297,12 @@ class Playlist:
 
         self.stop()
 
-        if not self.check_index(1, check_end=True):
+        if not self.check_index(i=1, check_end=True):
             return False
 
-        self.check_index(1)
-        self.update(play)
+        self.check_index(i=1)
+        self.update(play=play)
+
         return True
 
     def previous(self, play: bool = True):
@@ -312,51 +311,52 @@ class Playlist:
 
         self.stop()
 
-        if not self.check_index(-1, check_end=True):
+        if not self.check_index(i=-1, check_end=True):
             return False
 
-        self.check_index(-1)
-        self.update(play)
+        self.check_index(i=-1)
+        self.update(play=play)
         return True
 
     def clear(self):
         self.stop()
-        self.playlist = []
-        self.index = 0
+        self.playlist: list = []
+        self.index: int = 0
 
     def init(self):
-        self.set_current(None)
-        self.index = -1
+        self.set_current(music=None)
+        self.index: int = -1
 
         if self.playlist:
-            self.set_current(self.playlist[0])
+            self.set_current(music=self.playlist[0])
 
     def update(self, play: bool = True):
-        self.set_current(self.get_music(self.index))
+        self.set_current(music=self.get_music(val=self.index))
+
         if play:
             self.play()
 
     def play(self, val: int = None):
         if self.index < 0:
-            self.index = 0
+            self.index: int = 0
 
         if not val:
-            val = self.index
+            val: int = self.index
             self.check_index()
 
-        music = self.get_music(val)
+        music = self.get_music(val=val)
 
         if not music:
-            self.add_music(val)
-            music = self.get_music(val)
+            self.add_music(music=val)
+            music = self.get_music(val=val)
 
         self.stop()
 
         if isinstance(val, str):
             index = self.playlist.index(music)
-            self.set_index(index)
+            self.set_index(index=index)
 
-        self.set_current(music)
+        self.set_current(music=music)
 
         try:
             self.current.play()
@@ -369,7 +369,7 @@ class Playlist:
         except AttributeError:
             pass
 
-        self.set_current(None)
+        self.set_current(music=None)
 
     def pause(self):
         try:
@@ -388,31 +388,43 @@ class Playlist:
             f.write(json.dumps(self.get_files()))
 
     def load(self):
-        with open(f"{self.name}.json", "r") as f:
-            val = json.loads(f.read())
-        self.add_music(val)
+        with open(f"{self.name}.json", "r", encoding="utf8") as f:
+            val: dict = json.loads(f.read())
+
+        self.add_music(music=val)
 
     def build_str(self):
-        res = ""
+        res: str = ""
+
         for key, value in self.__dict__.items():
             if key == "current":
                 res += f"{key} : \n-----MUSIC-----\n{value}---------------\n"
+
             elif key == "playlist":
                 res += f"{key} : {self.get_names()}\n"
+
             else:
                 res += f"{key} : {value}\n"
+
         return res
 
     def __str__(self):
         return self.build_str()
 
 
+class PlaylistObj:
+    def __init__(self, playlist: Playlist, music: Music):
+        self.playlist: Playlist = playlist
+        self.music: Music = music
+
+
 class Playlists:
     def __init__(self, run: bool = True):
-        self.playlists = []
-        self.run = run
-        self.launched = False
-        self.callback = None
+        self.playlists: list = []
+        self.run: bool = run
+        self.launched: bool = False
+        self.callback: callable = None
+        self._delay: float = .2
 
         if run:
             self.start()
@@ -420,49 +432,49 @@ class Playlists:
     def _check_music(self):
         while self.run:
             for playlist in self.playlists:
-                music = playlist.get_current()
+                music: Music = playlist.get_current()
 
                 if not music:
-                    playlist.lock = True
+                    playlist.lock: bool = True
                     continue
 
                 if not music.is_over() and music.is_playing():
-                    playlist.lock = False
-                    music.add_timer(.2)
+                    playlist.lock: bool = False
+                    music.add_timer(value=self._delay)
 
                 elif music.is_over() and playlist.is_auto() and not playlist.lock:
-                    playlist.lock = True
+                    playlist.lock: bool = True
 
                     if callable(self.callback):
-                        self.call_event(playlist)
+                        self.call_event(playlist=playlist)
 
                     playlist.next()
 
                 elif music.is_over() and not playlist.lock:
-                    playlist.lock = True
+                    playlist.lock: bool = True
 
                     if callable(self.callback):
-                        self.call_event(playlist)
+                        self.call_event(playlist=playlist)
 
-            time.sleep(.2)
+            time.sleep(self._delay)
 
-        self.launched = False
+        self.launched: bool = False
 
-    def call_event(self, playlist):
-        data = PlaylistObj(playlist , playlist.get_current())
+    def call_event(self, playlist: Playlist):
+        data = PlaylistObj(playlist=playlist, music=playlist.get_current())
         self.callback(data)
 
     def on_music_over(self, callback: callable = None):
-        def add_debug(func):
-            self.callback = func
+        def add_debug(func: callable):
+            self.callback: callable = func
             return func
 
         if callback:
-            return add_debug(callback)
+            return add_debug(func=callback)
 
         return add_debug
 
-    def remove_playlist(self, playlist):
+    def remove_playlist(self, playlist: Playlist):
         if playlist in self.playlist:
             self.playlist.remove(playlist)
 
@@ -474,26 +486,30 @@ class Playlists:
                     ):
 
         if isinstance(playlist, Playlist):
-            pl = playlist
+            pl: Playlist = playlist
+
         elif str(type(playlist)) == "<class 'easy_playlist.playlist.Playlist'>":
-            pl = playlist
+            pl: Playlist = playlist
+
         else:
-            pl = Playlist(playlist, musics, loop, auto)
+            pl: Playlist = Playlist(playlist, musics, loop, auto)
 
         self.playlists.append(pl)
+
         return pl
 
     def add_music(self, playlist: str, music: str):
         if isinstance(playlist, str):
-            temp = self.get_playlist(playlist)
+            temp: Playlist = self.get_playlist(name=playlist)
 
             if not temp:
-                self.add_playlist(playlist, music)
-                playlist = self.get_playlist(playlist)
-            else:
-                playlist = temp
+                self.add_playlist(playlist=playlist, music=music)
+                playlist: Playlist = self.get_playlist(name=playlist)
 
-        playlist.add_music(music)
+            else:
+                playlist: Playlist = temp
+
+        playlist.add_music(music=music)
 
     def get_playlist(self, name: str):
         for play in self.playlists:
@@ -502,14 +518,14 @@ class Playlists:
 
     def start(self):
         if not self.launched:
-            self.run = True
+            self.run: bool = True
             Thread(target=self._check_music).start()
 
-        self.launched = True
+        self.launched: bool = True
 
     def stop(self):
-        self.run = False
-        self.launched = False
+        self.run: bool = False
+        self.launched: bool = False
 
     def exit(self):
         self.stop()
