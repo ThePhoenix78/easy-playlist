@@ -492,13 +492,20 @@ class Playlists:
             pl: Playlist = playlist
 
         else:
-            pl: Playlist = Playlist(playlist, musics, loop, auto)
+            pl: Playlist = Playlist(name=playlist, playlist=musics, loop=loop, auto=auto)
 
         self.playlists.append(pl)
 
         return pl
 
-    def add_music(self, playlist: str, music: str):
+    def add_music(self, playlist: str, music: list):
+        """
+        Add a music to the playlist, if there is no playlist it's created
+
+        Args:
+            playlist (Playlist | str): The target playlist
+            music (Music | list |str): The list of music to add
+        """
         if isinstance(playlist, str):
             temp: Playlist = self.get_playlist(name=playlist)
 
