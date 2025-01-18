@@ -1,16 +1,23 @@
 #  coding: utf-8
-# Version 1.5.1
+# Version 1.8.0
 
 from random import choice, shuffle
-from mutagen.mp3 import MP3
 from threading import Thread
+import ffmpeg
 import time
 import json
-import sys
 
 
-def shorter(file, before: int = 0, after: int = 0, output: str = None):
-    music_len = MP3(file).info.length
+def get_duration(file_path):
+    try:
+        probe = ffmpeg.probe(file_path, v='error', select_streams='a', show_entries='format=duration')
+        return float(probe['format']['duration'])
+    except Exception:
+        return None
+
+
+def shorter(file: str, before: int = 0, after: int = 0, output: str = None):
+    music_len = get_duration(file)
 
     with open(file, "rb") as f:
         music = f.readlines()
@@ -41,7 +48,7 @@ class Music:
         if "\\" in path_to_file or "/" in path_to_file:
             self.name = path_to_file.replace("\\", "/").rsplit("/", 1)[-1]
 
-        self.length = MP3(self.file).info.length
+        self.length = get_duration(self.file)
         self.timer = 0
         self.playing = False
         self.over = False
@@ -183,7 +190,7 @@ class Playlist:
 
         elif isinstance(music, Music):
             self.playlist.append(music)
-            
+
         elif str(type(music)) == "<class 'easy_playlist.playlist.Music'>":
             self.playlist.append(music)
 
@@ -506,28 +513,3 @@ class Playlists:
 
     def exit(self):
         self.stop()
-
-
-if __name__ == "__main__":
-    pl = Playlists()
-    pl1 = pl.add_playlist(playlist="test1", musics=["bip1.mp3"])
-    pl2 = pl.add_playlist(playlist="test2", musics=["bip2.mp3"])
-    pl.add_music("test1", "bip2.mp3")
-
-    pl1.play()
-
-    print(f"{pl1.str_timer()}")
-    pl2.play()
-
-    print("starting...")
-
-    @pl.on_music_over()
-    def over(data):
-        print(f"[{data.playlist.name}] {data.music.name} is over, next song now!")
-
-        if data.playlist.is_over():
-            print(f"Playlist {data.playlist.name} is over")
-            data.playlist.clear()
-            return
-
-        data.playlist.next()
