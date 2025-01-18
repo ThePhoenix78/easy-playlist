@@ -21,7 +21,7 @@ GitHub : [Github](https://github.com/ThePhoenix78/easy-playlist)
 
 ## Usages
 
-This library will work with any .mp3 files
+This library will work with any files, it use ffmpeg to get the lenght
 It's was desinged to work with bots in general
 
 
