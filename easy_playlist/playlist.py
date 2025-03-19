@@ -1,5 +1,5 @@
 #  coding: utf-8
-# Version 1.8.0
+# Version 1.8.4
 
 from random import choice, shuffle
 from threading import Thread
@@ -16,15 +16,15 @@ def get_duration(file_path: str):
         return None
 
 
-def shorter(file: str, before: int = 0, after: int = 0, output: str = None):
+def shorter(file: str, from_start: int = 0, from_end: int = 0, output: str = None):
     music_len: float = get_duration(file)
 
     with open(file, "rb") as f:
         music: list = f.readlines()
 
     nb_lines: int = len(music)
-    cut_before: int = int(before * nb_lines / music_len)
-    cut_after: int = int(after * nb_lines / music_len)
+    cut_before: int = int(from_start * nb_lines / music_len)
+    cut_after: int = int(from_end * nb_lines / music_len)
 
     if not output:
         output: str = file.replace(".mp3", "CUT.mp3")
