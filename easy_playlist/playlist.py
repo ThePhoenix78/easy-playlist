@@ -1,4 +1,5 @@
 #  coding: utf-8
+# Version 1.9.1
 
 from random import choice, shuffle
 from threading import Thread
@@ -475,7 +476,7 @@ class Playlists:
                     playlist.lock: bool = True
 
                     if callable(self.callback):
-                        await self.call_event(playlist=playlist)
+                        await self.call_event_async(playlist=playlist)
 
                     playlist.next()
 
@@ -483,9 +484,13 @@ class Playlists:
                     playlist.lock: bool = True
 
                     if callable(self.callback):
-                        await self.call_event(playlist=playlist)
+                        await self.call_event_async(playlist=playlist)
 
             await asyncio.sleep(self._delay)
+
+    async def call_event_async(self, playlist: Playlist):
+        data = PlaylistObj(playlist=playlist, music=playlist.get_current())
+        await self.callback(data)
 
     def call_event(self, playlist: Playlist):
         data = PlaylistObj(playlist=playlist, music=playlist.get_current())
