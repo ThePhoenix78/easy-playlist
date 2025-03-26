@@ -105,7 +105,7 @@ def play(music):
 
 
 @pl.on_music_over()
-def music_over(data):
+(async) def music_over(data):
 	print(f"{data.playlist.name} {data.music.name} is over, playing next now")
 	pl.next()
 	bot.play_music(pl.get_current().file)

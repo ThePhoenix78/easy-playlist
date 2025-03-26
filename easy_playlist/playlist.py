@@ -1,11 +1,12 @@
 #  coding: utf-8
-# Version 1.8.4
 
 from random import choice, shuffle
 from threading import Thread
+import asyncio
 import ffmpeg
 import time
 import json
+
 
 
 def get_duration(file_path: str):
@@ -421,10 +422,9 @@ class PlaylistObj:
 class Playlists:
     def __init__(self, run: bool = True):
         self.playlists: list = []
-        self.run: bool = run
-        self.launched: bool = False
+        self.run: bool = False
         self.callback: callable = None
-        self._delay: float = .2
+        self._delay: float = .1
 
         if run:
             self.start()
@@ -458,21 +458,38 @@ class Playlists:
 
             time.sleep(self._delay)
 
-        self.launched: bool = False
+    async def _check_music_async(self):
+        while self.run:
+            for playlist in self.playlists:
+                music: Music = playlist.get_current()
+
+                if not music:
+                    playlist.lock: bool = True
+                    continue
+
+                if not music.is_over() and music.is_playing():
+                    playlist.lock: bool = False
+                    music.add_timer(value=self._delay)
+
+                elif music.is_over() and playlist.is_auto() and not playlist.lock:
+                    playlist.lock: bool = True
+
+                    if callable(self.callback):
+                        await self.call_event(playlist=playlist)
+
+                    playlist.next()
+
+                elif music.is_over() and not playlist.lock:
+                    playlist.lock: bool = True
+
+                    if callable(self.callback):
+                        await self.call_event(playlist=playlist)
+
+            await asyncio.sleep(self._delay)
 
     def call_event(self, playlist: Playlist):
         data = PlaylistObj(playlist=playlist, music=playlist.get_current())
         self.callback(data)
-
-    def on_music_over(self, callback: callable = None):
-        def add_debug(func: callable):
-            self.callback: callable = func
-            return func
-
-        if callback:
-            return add_debug(func=callback)
-
-        return add_debug
 
     def remove_playlist(self, playlist: Playlist):
         if playlist in self.playlist:
@@ -524,15 +541,50 @@ class Playlists:
                 return play
 
     def start(self):
-        if not self.launched:
+        if not self.run:
             self.run: bool = True
             Thread(target=self._check_music).start()
 
-        self.launched: bool = True
-
     def stop(self):
         self.run: bool = False
-        self.launched: bool = False
 
     def exit(self):
         self.stop()
+
+    def _start(self, run_async: bool = True):
+        if not run_async and self.run:
+            return
+
+        if self.run:
+            self.run: bool = False
+            time.sleep(self._delay + .01)
+
+        if not self.run:
+            self.run: bool = True
+
+            if run_async:
+                self.start_async_thread(self._check_music_async())
+
+            else:
+                Thread(target=self._check_music).start()
+
+    def start_async_thread(self, awaitable):
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        Thread(target=loop.run_forever).start()
+        asyncio.run_coroutine_threadsafe(awaitable, loop)
+        return loop
+
+    def stop_async_thread(self, loop):
+        loop.call_soon_threadsafe(loop.stop)
+
+    def on_music_over(self, callback: callable = None):
+        def add_debug(func: callable):
+            self._start(asyncio.iscoroutinefunction(func))
+            self.callback: callable = func
+            return func
+
+        if callback:
+            return add_debug(func=callback)
+
+        return add_debug
